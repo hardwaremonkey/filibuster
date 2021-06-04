@@ -1,28 +1,48 @@
+''' filibuster.py
+Searches through all .pdf and .docx files in the directory that the script is 
+run from for keywords contained in the file search_terms.txt in the same 
+directory.
+Outputs a list of the search terms and how many times these occur in all of
+the documents. Counts every occurrence of the search term, not how many 
+documents it appears in.
+
+Matt Oppenheim June 2021
+'''
 import docx2txt
 import logging
 import os
+import pandas as pd
 import PyPDF2
 
 DIR = os.path.dirname(os.path.realpath(__file__))
-logging.basicConfig(level=logging.INFO, format='%(message)s')
+logging.basicConfig(level=logging.DEBUG, format='%(message)s')
 logging.info('started filibuster')
 SEARCH_TERMS_FILENAME = 'search_terms.txt'
 
 
 def count_search_terms(text, search_terms):
     ''' Count how many times search_term occurs in text. '''
+    # text and search terms are made lower case to make the process case insensitive
     text = text.lower().split()
     for search_term in search_terms:
+        # remove trailing newline characters from the search terms
         search_term = search_term.strip()
         search_term_count = text.count(search_term.lower())
         logging.info('{} occurs {} times'.format(search_term, search_term_count))
 
 
+def create_dataframe(search_terms):
+    ''' Create pandas dataframe to store found terms in. '''
+    col_names = search_terms.copy()
+    col_names.insert(0, 'doc_name')
+    df = pd.DataFrame(columns=col_names)
+    logging.debug('df_head: {}'.format(df.head()))
+    return df
+
 def docx_to_text(filepath):
     ''' Extract text from Word docx files. '''
     logging.info('  processing Word file: {}'.format(os.path.basename(filepath)))
     text = docx2txt.process(os.path.join(DIR, filepath))
-    logging.debug(text)
     return text
 
 
@@ -66,6 +86,7 @@ def main():
         exit_code('search terms file does not exist: {}'.format(search_terms_filepath))
     search_terms = get_search_terms()
     logging.info('searching for Word and pdf files in: {}'.format(DIR))
+    df = create_dataframe(search_terms)
     for filename in os.listdir(DIR):
         logging.info('found {}'.format(filename))
 
