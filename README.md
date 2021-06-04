@@ -5,7 +5,9 @@ files.
 
 ## dependencies
 
-The .docx files are processed using the docx2txt library.
+.docx files are processed using the docx2txt library.
+.pdf files are process using the PyPDF2 library.
+
 
 ## contacts
 matt@mattoppenheim.com
