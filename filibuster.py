@@ -20,24 +20,25 @@ logging.info('started filibuster')
 SEARCH_TERMS_FILENAME = 'search_terms.txt'
 
 
-def count_search_terms(text, search_terms):
-    ''' Count how many times search_term occurs in text. '''
-    # text and search terms are made lower case to make the process case insensitive
-    text = text.lower().split()
-    for search_term in search_terms:
-        # remove trailing newline characters from the search terms
-        search_term = search_term.strip()
-        search_term_count = text.count(search_term.lower())
-        logging.info('{} occurs {} times'.format(search_term, search_term_count))
+def count_search_terms(text, search_term):
+    ''' Update df with how many times search_terms occurs in text. '''
+    # remove trailing newline characters from the search terms
+    search_term = search_term.strip()
+    search_term_count = text.count(search_term.lower())
+    logging.info('{} occurs {} times'.format(search_term, search_term_count))
+    return search_term_count
 
+    
 
 def create_dataframe(search_terms):
     ''' Create pandas dataframe to store found terms in. '''
     col_names = search_terms.copy()
     col_names.insert(0, 'doc_name')
     df = pd.DataFrame(columns=col_names)
+    # df.set_index('doc_name')
     logging.debug('df_head: {}'.format(df.head()))
     return df
+
 
 def docx_to_text(filepath):
     ''' Extract text from Word docx files. '''
@@ -53,6 +54,18 @@ def exit_code(message):
     raise SystemExit
 
 
+def found_search_terms(file_text, search_terms):
+    ''' Create list of how many of each search term is found in file_text. '''
+    # text and search terms are made lower case to make the process case insensitive
+    found_terms_count = []
+    file_text = file_text.lower().split()
+    for search_term in search_terms:
+        search_term_count = count_search_terms(file_text, search_term)
+        found_terms_count.append(search_term_count)
+    logging.debug('found_terms_count: {}'.format(found_terms_count))
+    return found_terms_count
+
+
 def get_filepath(dir, filename):
     ''' Create filepath. '''
     return os.path.join(DIR, filename)
@@ -63,7 +76,7 @@ def get_search_terms():
     search_terms = []
     with open(os.path.join(DIR, SEARCH_TERMS_FILENAME), 'r') as search_terms_file:
         for search_term in search_terms_file:
-            search_terms.append(search_term)
+            search_terms.append(search_term.strip())
     return search_terms
         
 
@@ -80,6 +93,13 @@ def pdf_to_text(filepath):
     return all_text
 
 
+def update_df(df, filename, found_terms_list):
+    ''' Add the found_terms_list as a new row to the dataframe. '''
+    found_terms_list.insert(0, filename)
+    df.loc[len(df)] = found_terms_list
+    return df
+
+
 def main():
     search_terms_filepath = os.path.join(DIR, SEARCH_TERMS_FILENAME)
     if not os.path.exists(search_terms_filepath):
@@ -92,13 +112,17 @@ def main():
 
         if filename.endswith('.docx'):
             filepath = get_filepath(DIR, filename)
-            docx_text = docx_to_text(filepath)
-            count_search_terms(docx_text, search_terms)
+            file_text = docx_to_text(filepath)
+            found_terms_list = found_search_terms(file_text, search_terms)
+            df = update_df(df, filename, found_terms_list)
 
         if filename.endswith('.pdf'):
             filepath = get_filepath(DIR, filename)
-            pdf_text = pdf_to_text(filepath)
-            count_search_terms(pdf_text, search_terms)
+            file_text = pdf_to_text(filepath)
+            found_terms_list = found_search_terms(file_text, search_terms)
+            df = update_df(df, filename, found_terms_list)
+
+    logging.debug('df_head: {}'.format(df.head()))
 
 if __name__ == '__main__':
     main()
