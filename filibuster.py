@@ -8,28 +8,37 @@ documents it appears in.
 
 Matt Oppenheim June 2021
 '''
+import click
 import docx2txt
 import logging
 import os
 import pandas as pd
 import PyPDF2
+import re
 
-DIR = os.path.dirname(os.path.realpath(__file__))
+SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 logging.basicConfig(level=logging.DEBUG, format='%(message)s')
 logging.info('started filibuster')
 SEARCH_TERMS_FILENAME = 'search_terms.txt'
 
 
+def clean_text(text):
+    ''' Make all text lower case and replaces punctuation marks with spaces. '''
+    output_text = ''
+    for word in text:
+        word = word.lower()
+        ''.join(letter for letter in word if letter.isalnum())
+
+
 def count_search_terms(text, search_term):
     ''' Update df with how many times search_terms occurs in text. '''
     # remove trailing newline characters from the search terms
-    search_term = search_term.strip()
-    search_term_count = text.count(search_term.lower())
+    search_term = search_term.lower().strip()
+    search_term_count = text.count(search_term)
     logging.info('{} occurs {} times'.format(search_term, search_term_count))
     return search_term_count
 
     
-
 def create_dataframe(search_terms):
     ''' Create pandas dataframe to store found terms in. '''
     col_names = search_terms.copy()
@@ -43,7 +52,7 @@ def create_dataframe(search_terms):
 def docx_to_text(filepath):
     ''' Extract text from Word docx files. '''
     logging.info('  processing Word file: {}'.format(os.path.basename(filepath)))
-    text = docx2txt.process(os.path.join(DIR, filepath))
+    text = docx2txt.process(filepath)
     return text
 
 
@@ -68,13 +77,13 @@ def found_search_terms(file_text, search_terms):
 
 def get_filepath(dir, filename):
     ''' Create filepath. '''
-    return os.path.join(DIR, filename)
+    return os.path.join(dir, filename)
 
 
-def get_search_terms():
+def get_search_terms(dir):
     ''' Extract list of search terms from file.'''
     search_terms = []
-    with open(os.path.join(DIR, SEARCH_TERMS_FILENAME), 'r') as search_terms_file:
+    with open(os.path.join(dir, SEARCH_TERMS_FILENAME), 'r') as search_terms_file:
         for search_term in search_terms_file:
             search_terms.append(search_term.strip())
     return search_terms
@@ -89,6 +98,7 @@ def pdf_to_text(filepath):
         for page in range(pdf_reader.getNumPages()):
             page = pdf_reader.getPage(page) 
             page_text = page.extractText()
+            # add this page of text to all_text
             all_text = '{} {}'.format(all_text, page_text)
     return all_text
 
@@ -99,25 +109,27 @@ def update_df(df, filename, found_terms_list):
     df.loc[len(df)] = found_terms_list
     return df
 
-
-def main():
-    search_terms_filepath = os.path.join(DIR, SEARCH_TERMS_FILENAME)
+@click.command()
+@click.option('--dir', default=SCRIPT_DIR, help='Directory containing files.')
+def main(dir):
+    logging.info('search directory: {}'.format(dir))
+    search_terms_filepath = os.path.join(dir, SEARCH_TERMS_FILENAME)
     if not os.path.exists(search_terms_filepath):
         exit_code('search terms file does not exist: {}'.format(search_terms_filepath))
-    search_terms = get_search_terms()
-    logging.info('searching for Word and pdf files in: {}'.format(DIR))
+    search_terms = get_search_terms(dir)
+    logging.info('searching for Word and pdf files in: {}'.format(dir))
     df = create_dataframe(search_terms)
-    for filename in os.listdir(DIR):
+    for filename in os.listdir(dir):
         logging.info('found {}'.format(filename))
 
         if filename.endswith('.docx'):
-            filepath = get_filepath(DIR, filename)
+            filepath = get_filepath(dir, filename)
             file_text = docx_to_text(filepath)
             found_terms_list = found_search_terms(file_text, search_terms)
             df = update_df(df, filename, found_terms_list)
 
         if filename.endswith('.pdf'):
-            filepath = get_filepath(DIR, filename)
+            filepath = get_filepath(dir, filename)
             file_text = pdf_to_text(filepath)
             found_terms_list = found_search_terms(file_text, search_terms)
             df = update_df(df, filename, found_terms_list)
