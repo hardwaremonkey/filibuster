@@ -113,6 +113,16 @@ def pdf_to_text(filepath):
     return all_text
 
 
+def sum_df_columns(df):
+    ''' Add a row containing column totals to dataframe. '''
+    df = df.apply(pd.to_numeric, downcast='signed', errors='ignore')
+    # df = df.append(df.sum(numeric_only=True), ignore_index=True)
+    totals = df.sum(numeric_only=True)
+    totals.name=('Totals')
+    df = df.append(totals)
+    return df
+
+
 def update_df(df, filename, found_terms_list):
     ''' Add the found_terms_list as a new row to the dataframe. '''
     found_terms_list.insert(0, filename)
@@ -144,6 +154,7 @@ def main(dir):
             found_terms_list = found_search_terms(file_text, search_terms)
             df = update_df(df, filename, found_terms_list)
 
+    df = sum_df_columns(df)
     logging.debug('df_head:\n{}'.format(df.head()))
 
 if __name__ == '__main__':
