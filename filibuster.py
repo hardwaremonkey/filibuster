@@ -25,15 +25,21 @@ SEARCH_TERMS_FILENAME = 'search_terms.txt'
 def clean_text(text):
     ''' Make all text lower case and replaces punctuation marks with spaces. '''
     output_text = ''
-    for word in text:
+    logging.debug('*** unclean_text\n{}'.format(text))
+    for word in text.split():
         word = word.lower()
-        ''.join(letter for letter in word if letter.isalnum())
-
+        # replace all non-alphanumeric or non-whitespace characters with space
+        word = re.sub(r'[^\w\s]', "", word)
+        output_text = '{} {}'.format(output_text, word)
+    logging.debug('*** clean_text\n{}'.format(output_text))
+    return output_text
 
 def count_search_terms(text, search_term):
     ''' Update df with how many times search_terms occurs in text. '''
     # remove trailing newline characters from the search terms
     search_term = search_term.lower().strip()
+    # want complete word matches only, e.g. not 'acat' when looking for 'cat'
+    search_term = ' {} '.format(search_term)
     search_term_count = text.count(search_term)
     logging.info('{} occurs {} times'.format(search_term, search_term_count))
     return search_term_count
@@ -53,6 +59,8 @@ def docx_to_text(filepath):
     ''' Extract text from Word docx files. '''
     logging.info('  processing Word file: {}'.format(os.path.basename(filepath)))
     text = docx2txt.process(filepath)
+    # remove punctuation marks
+    text = clean_text(text)
     return text
 
 
@@ -67,7 +75,6 @@ def found_search_terms(file_text, search_terms):
     ''' Create list of how many of each search term is found in file_text. '''
     # text and search terms are made lower case to make the process case insensitive
     found_terms_count = []
-    file_text = file_text.lower().split()
     for search_term in search_terms:
         search_term_count = count_search_terms(file_text, search_term)
         found_terms_count.append(search_term_count)
@@ -100,6 +107,9 @@ def pdf_to_text(filepath):
             page_text = page.extractText()
             # add this page of text to all_text
             all_text = '{} {}'.format(all_text, page_text)
+    # remove punctuation marks
+    all_text = clean_text(all_text)
+    logging.debug('*** pdf_to_text: {}'.format(all_text))
     return all_text
 
 
@@ -134,7 +144,7 @@ def main(dir):
             found_terms_list = found_search_terms(file_text, search_terms)
             df = update_df(df, filename, found_terms_list)
 
-    logging.debug('df_head: {}'.format(df.head()))
+    logging.debug('df_head:\n{}'.format(df.head()))
 
 if __name__ == '__main__':
     main()
