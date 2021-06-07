@@ -1,0 +1,5 @@
+cat acat acata
+cat, acat, acata; #cat
+dog bdog bdogb
+dog. bdog. bdog! \dog
+horse horsey ~horse

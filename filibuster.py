@@ -17,7 +17,7 @@ import PyPDF2
 import re
 
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
-logging.basicConfig(level=logging.DEBUG, format='%(message)s')
+logging.basicConfig(level=logging.INFO, format='%(message)s')
 logging.info('started filibuster')
 SEARCH_TERMS_FILENAME = 'search_terms.txt'
 
@@ -53,6 +53,12 @@ def create_dataframe(search_terms):
     # df.set_index('doc_name')
     logging.debug('df_head: {}'.format(df.head()))
     return df
+
+
+def display_df(df):
+    logging.info('\nSearch results:\n')
+    with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
+        print(df)
 
 
 def docx_to_text(filepath):
@@ -156,6 +162,6 @@ def main(dir):
 
     df = sum_df_columns(df)
     logging.debug('df_head:\n{}'.format(df.head()))
-
+    display_df(df)
 if __name__ == '__main__':
     main()
