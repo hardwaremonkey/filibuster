@@ -1,11 +1,12 @@
 ''' filibuster.py
-Searches through all .pdf and .docx files in the directory that the script is 
-run from for keywords contained in the file search_terms.txt in the same 
-directory.
-Outputs a list of the search terms and how many times these occur in all of
-the documents. Counts every occurrence of the search term, not how many 
-documents it appears in.
+Searches through all .pdf and .docx files for keywords contained in the file search_terms.txt.
 
+Outputs a list of the search terms and how many times these occur in all of
+the documents. Counts the total occurrences of each search term in all documents. 
+Counts how many times the search term occurs in each document.
+
+option: --dir # specifies the directory to find files and search terms in
+default: the directory that the script is running from
 Matt Oppenheim June 2021
 '''
 import click
@@ -34,8 +35,9 @@ def clean_text(text):
     logging.debug('*** clean_text\n{}'.format(output_text))
     return output_text
 
+
 def count_search_terms(text, search_term):
-    ''' Update df with how many times search_terms occurs in text. '''
+    ''' Update df with how many times search_term occurs in text. '''
     # remove trailing newline characters from the search terms
     search_term = search_term.lower().strip()
     # want complete word matches only, e.g. not 'acat' when looking for 'cat'
@@ -63,7 +65,7 @@ def display_df(df):
 
 def docx_to_text(filepath):
     ''' Extract text from Word docx files. '''
-    logging.info('  processing Word file: {}'.format(os.path.basename(filepath)))
+    logging.info('  edoprocessing Word file: {}'.format(os.path.basename(filepath)))
     text = docx2txt.process(filepath)
     # remove punctuation marks
     text = clean_text(text)
@@ -100,7 +102,15 @@ def get_search_terms(dir):
         for search_term in search_terms_file:
             search_terms.append(search_term.strip())
     return search_terms
-        
+
+
+def how_many_docs(df):
+    ''' Add row to dataframe with how many docs each search term appeared in. '''
+    temp_df = df.iloc[:-1,:]
+    docs_in = temp_df.astype(bool).sum(axis=0)
+    docs_in.name=('number_docs_found_in')
+    df = df.append(docs_in)
+    return df
 
 def pdf_to_text(filepath):
     ''' Extract text from pdf files. '''
@@ -118,13 +128,12 @@ def pdf_to_text(filepath):
     logging.debug('*** pdf_to_text: {}'.format(all_text))
     return all_text
 
-
-def sum_df_columns(df):
+def total_appearances_search_terms(df):
     ''' Add a row containing column totals to dataframe. '''
     df = df.apply(pd.to_numeric, downcast='signed', errors='ignore')
     # df = df.append(df.sum(numeric_only=True), ignore_index=True)
     totals = df.sum(numeric_only=True)
-    totals.name=('Totals')
+    totals.name=('total_times_word_appears')
     df = df.append(totals)
     return df
 
@@ -160,8 +169,11 @@ def main(dir):
             found_terms_list = found_search_terms(file_text, search_terms)
             df = update_df(df, filename, found_terms_list)
 
-    df = sum_df_columns(df)
+    df = total_appearances_search_terms(df)
+    df = how_many_docs(df)
     logging.debug('df_head:\n{}'.format(df.head()))
     display_df(df)
+
+
 if __name__ == '__main__':
     main()
