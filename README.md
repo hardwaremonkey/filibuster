@@ -15,9 +15,13 @@ files for keywords. His first name is Fil. Hence the script's name
 ## quickstart
 
 Install Python3.
+
 Install the dependencies using pip3 install -r requirements.txt.
+
 Put all your .docx and .pdf files into the same directory as filibuster.py.
+
 Make a list of search terms and put them in a file called search_terms.txt.
+
 Run using: python3 filibuster.py
 
 ## how to use, detailed
@@ -30,7 +34,7 @@ this directory.
 There are a few libraries that the script needs that are not included with the
 default Python installation. Install these libraries using the command:
 
-pip3 install -r requirements.txt
+**pip3 install -r requirements.txt**
 
 In the directory containing the file requirements.txt.
 
@@ -44,12 +48,12 @@ same directory as the .pdf and .docx files.
 If the .docx and .pdf files are in the same directory as the script
 filibuster.py, run the script using:
 
-python3 filibuster.py
+**python3 filibuster.py**
 
 If the .docx and .pdf files and search_terms.txt files are in a different
 directory, use the command:
 
-python3 filibuster.py --dir=<path to files>
+**python3 filibuster.py --dir=path to files**
 
 ## notes
 
@@ -78,5 +82,3 @@ click is used for the command line interface
 ## contacts
 
 matt@mattoppenheim.com
-
-
