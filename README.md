@@ -14,9 +14,13 @@ files for keywords. His first name is Fil. Hence the script's name
 
 ## quickstart
 
-Install Python3.
+Install Python3. Click all the options to install pip when you do this and to add python to the path.
 
 Install the dependencies using pip3 install -r requirements.txt.
+
+If this doesn't work, type:
+
+pip install click PyPDF2 click docx2txt pandas
 
 Put all your .docx and .pdf files into the same directory as filibuster.py.
 
@@ -26,7 +30,7 @@ Run using: python3 filibuster.py
 
 ## how to use, detailed
 
-Install Python3.
+Install Python3. Click the options to add Python to your path and to install pip.
 
 Unpack the zip file from this repository to a convenient directory. Open a command line terminal in
 this directory.
@@ -37,6 +41,14 @@ default Python installation. Install these libraries using the command:
 **pip3 install -r requirements.txt**
 
 In the directory containing the file requirements.txt.
+
+If you don't have pip3 installed, you may have not ticked that option when installing Python. For more details and pictures of what to do, have a look at [this website](https://medium.com/swlh/solved-windows-pip-command-not-found-or-pip-is-not-recognized-as-an-internal-or-external-command-dd34f8b2938f) and re-install Python with the options to install pip selected and adding Python to the system path selected.
+
+Sometimes using pip does not work as I may have built the script using an older or newer version of Python than you have installed. If you get errors type:
+
+**pip install click PyPDF2 click docx2txt pandas**
+
+To install the dependencies this way.
 
 Put all of the .docx and .pdf files that you want to search through into a
 single directory. Either the same directory as the filibuster.py script or
